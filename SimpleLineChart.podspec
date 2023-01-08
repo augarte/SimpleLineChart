@@ -1,22 +1,18 @@
-Pod::Spec.new do |spec|
-  spec.name         = "SimpleLineChart"
-  spec.version      = "0.0.1"
-  spec.summary      = "A short description of SimpleLineChart."
+Pod::Spec.new do |s|
+  s.name         = "SimpleLineChart"
+  s.version      = "0.0.1"
+  s.summary      = "Simple line charts for iOS 📈"
   
-  spec.description  = <<-DESC
-                   DESC
+  # s.description  = <<-DESC
+  #                 DESC
 
-  spec.homepage     = "http://github.com/augarte/SimpleLineChart"
-  # spec.screenshots  = "www.example.com/screenshots_1.gif", "www.example.com/screenshots_2.gif"
+  s.homepage     = "https://github.com/augarte/SimpleLineChart"
+  # s.screenshots  = "", ""
+  s.license      = { :type => "GPL", :file => "LICENSE" }
+  s.author       = { "Aimar Ugarte" => "ugarteaimar@gmail.com" }
+  s.source       = { :git => "https://github.com/augarte/SimpleLineChart.git", :tag => "v#{s.version}" }
 
-  spec.license      = { :type => "MIT", :file => "LICENSE" }
-  spec.author             = { "Aimar Ugarte" => "ugarteaimar@gmail.com" }
-
-  spec.platform     = :ios, "13.0"
-
-  spec.source       = { :git => "http://github.com/augarte/SimpleLineChart.git", :tag => "#{spec.version}" }
-
-  spec.source_files  = "Classes", "Sources/*.swift"
-  spec.exclude_files = "Classes/Exclude"
-
+  s.platform      = :ios, "13.0"
+  s.swift_version = '5.0'
+  s.source_files  = "Sources/SimpleLineChart/**/*"
 end
