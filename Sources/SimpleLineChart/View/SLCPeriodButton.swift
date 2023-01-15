@@ -9,7 +9,6 @@ import Combine
 import UIKit
 
 @available(iOS 13.0, *)
-@IBDesignable
 public class SLCPeriodButton: UIButton {
     
     private var color: UIColor?

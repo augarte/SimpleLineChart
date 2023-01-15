@@ -14,30 +14,15 @@ public final class SimpleLineChart: UIView {
     
     // MARK: Constants
     private enum Constants {
-        static let cornerRadiusSize = CGSize(width: 8.0, height: 8.0)
         static let margin: CGFloat = 20.0
-        static let periodSpacing: CGFloat = 5.0
         static let periodTopSpace: CGFloat = Constants.margin
+        static let periodSpacing: CGFloat = 5.0
         static let periodBottomSpace: CGFloat = 10.0
         static let periodStackHeight: CGFloat = 30.0
+        static let cornerRadius: CGFloat = 8.0
+        static let cornerRadiusSize = CGSize(width: Constants.cornerRadius,
+                                             height: Constants.cornerRadius)
     }
-    
-    // MARK: Inspectables
-    @IBInspectable public var lineStroke: CGFloat = 3.0
-    @IBInspectable public var lineColor: UIColor = .white
-    @IBInspectable public var circleDiameter: CGFloat = 5.0
-    
-    @IBInspectable public var solidBackgroundColor: UIColor = .hexStringToUIColor(hex: "FD4345")
-    
-    @IBInspectable public var backgroundGradient: Bool = true
-    @IBInspectable public var gradientStartColor: UIColor = .hexStringToUIColor(hex: "FEB775")
-    @IBInspectable public var gradientEndColor: UIColor = .hexStringToUIColor(hex: "FD4345")
-    
-    @IBInspectable public var lineShadow: Bool = true
-    @IBInspectable public var lineShadowgradientStart: UIColor = .hexStringToUIColor(hex: "FEB775")
-    @IBInspectable public var lineShadowgradientEnd: UIColor = .hexStringToUIColor(hex: "FEB775")
-    
-    @IBInspectable public var addPeriodButtons: Bool = true
     
     // MARK: UI variables
     private lazy var periodStackView: UIStackView = {
@@ -51,11 +36,17 @@ public final class SimpleLineChart: UIView {
     
     // MARK: Private variables
     private var dataSets: [SLCDataSet] = []
+    private var chartStyle = SLCChartStyle()
     private var selectedPeriod = CurrentValueSubject<SLCPeriod?, Never>(SLCPeriod?(nil))
     private var periodSelectors: Array<SLCPeriod> = [SLCPeriod("1 Month", 2629800),
                                                   SLCPeriod("3 Month", 7889400),
                                                   SLCPeriod("1 Year", 31557600),
                                                   SLCPeriod("All Time", 3155760000)]
+    
+    init() {
+        super.init(frame: CGRectZero)
+        backgroundColor = .clear
+    }
     
     public override init(frame: CGRect) {
         super.init(frame: frame)
@@ -66,8 +57,13 @@ public final class SimpleLineChart: UIView {
     }
     
     public override func draw(_ rect: CGRect) {
+        guard let dataSet = dataSets.first else {
+            showEmptyState(rect)
+            return
+        }
+        
         // MARK: Background
-        setupGraph(rect, data: dataSets.first!)
+        setupGraph(rect, data: dataSet)
         
         // MARK: Lines
         for data in dataSets {
@@ -75,28 +71,26 @@ public final class SimpleLineChart: UIView {
         }
         
         // MARK: Date selectors
-        if addPeriodButtons {
+        if chartStyle.addPeriodButtons {
             addPeriodStackView(width: rect.width, height: rect.height)
         }
     }
 }
 
-// MARK: Setups
+// MARK: - Setups
 @available(iOS 13.0, *)
 private extension SimpleLineChart {
     
     private func setupGraph(_ rect: CGRect, data: SLCDataSet) {
         guard let context = UIGraphicsGetCurrentContext() else { return }
         
-        // -------------------
-        // Load initial points
+        // MARK: Load initial points
         if selectedPeriod.value == nil {
-            selectedPeriod.value = periodSelectors.first
+            selectedPeriod.value = chartStyle.addPeriodButtons ? periodSelectors.first : periodSelectors.last
         }
         changeDateRange(period: selectedPeriod.value!)
         
-        // -------------------
-        // Graph setup
+        // MARK: Graph setup
         let path = UIBezierPath(
             roundedRect: rect,
             byRoundingCorners: .allCorners,
@@ -104,11 +98,11 @@ private extension SimpleLineChart {
         )
         path.addClip()
         
-        // -------------------
-        // Background color
-        if (backgroundGradient) {
+        // MARK: Background color
+        if (chartStyle.backgroundGradient) {
             // Gradient setup
-            let colors = [gradientStartColor.cgColor, gradientEndColor.cgColor]
+            let colors = [chartStyle.gradientStartColor.cgColor,
+                          chartStyle.gradientEndColor.cgColor]
             let colorSpace = CGColorSpaceCreateDeviceRGB()
             let colorLocations: [CGFloat] = [0.0, 1.0]
             
@@ -118,7 +112,7 @@ private extension SimpleLineChart {
                 locations: colorLocations
             ) else { return }
 
-            // Draw gradient
+            // MARK: Draw gradient
             let startPoint = CGPoint.zero
             let endPoint = CGPoint(x: 0, y: bounds.height)
             context.drawLinearGradient(
@@ -128,9 +122,9 @@ private extension SimpleLineChart {
                 options: []
             )
         } else {
-            layer.cornerRadius = 8;
+            layer.cornerRadius = Constants.cornerRadius;
             layer.masksToBounds = true;
-            backgroundColor = solidBackgroundColor
+            backgroundColor = chartStyle.solidBackgroundColor
             backgroundColor?.setFill()
             UIGraphicsGetCurrentContext()!.fill(rect);
         }
@@ -159,7 +153,7 @@ private extension SimpleLineChart {
         
         // MARK: Y Point
         let topBorder = Constants.margin
-        let bottomBorder = addPeriodButtons ? Constants.periodStackHeight + Constants.periodTopSpace + Constants.periodBottomSpace : Constants.margin
+        let bottomBorder = chartStyle.addPeriodButtons ? Constants.periodStackHeight + Constants.periodTopSpace + Constants.periodBottomSpace : Constants.margin
         let graphHeight = height - topBorder - bottomBorder
         let yValues = data.filteredGraphPoints.map({ point in return point.y })
         guard let minYValue = yValues.min() else { return }
@@ -184,16 +178,16 @@ private extension SimpleLineChart {
         }
         
         // MARK: Line Style
-        data.lineColor.setStroke()
-        graphPath.lineWidth = lineStroke
+        data.lineStyle.lineColor.setStroke()
+        graphPath.lineWidth = data.lineStyle.lineStroke
         graphPath.stroke()
         
         // MARK: Line shadow
-        if (lineShadow && dataSets.count == 1) {
+        if (data.lineStyle.lineShadow && dataSets.count == 1) {
             context.saveGState()
             // Line shadow gradient setup
-            let startColor = gradientStartColor.cgColor
-            let endColor = backgroundGradient ? gradientEndColor.cgColor : solidBackgroundColor.cgColor
+            let startColor = data.lineStyle.lineShadowgradientStart.cgColor
+            let endColor = data.lineStyle.lineShadowgradientEnd.cgColor
 
             let colors = [startColor, endColor]
             let colorSpace = CGColorSpaceCreateDeviceRGB()
@@ -220,7 +214,7 @@ private extension SimpleLineChart {
             let highestYPoint = columnYPoint(maxYValue)
             let graphStartPoint = CGPoint(x: margin, y: highestYPoint)
             let graphEndPoint = CGPoint(x: margin,
-                                        y: bounds.height - (backgroundGradient ? 0 : bottomBorder))
+                                        y: bounds.height - (chartStyle.backgroundGradient ? 0 : bottomBorder))
 
             context.drawLinearGradient(
                 shadowGradient,
@@ -231,7 +225,8 @@ private extension SimpleLineChart {
         }
         
         // MARK: Data points
-        data.lineColor.setFill()
+        let circleDiameter = data.lineStyle.circleDiameter
+        data.lineStyle.lineColor.setFill()
         for i in 0..<data.filteredGraphPoints.count {
             var point = CGPoint(x: columnXPoint(data.filteredGraphPoints[i].x), y: columnYPoint(data.filteredGraphPoints[i].y))
             point.x -= circleDiameter / 2
@@ -250,7 +245,7 @@ private extension SimpleLineChart {
     }
 }
 
-// MARK: Period buttons
+// MARK: - Period buttons
 @available(iOS 13.0, *)
 private extension SimpleLineChart {
     
@@ -280,7 +275,9 @@ private extension SimpleLineChart {
                                y: 0,
                                width: buttonWidth,
                                height: Constants.periodStackHeight)
-            let button = SLCPeriodButton(period: period, color:gradientStartColor, selectedPeriod: selectedPeriod, frame: frame)
+            let button = SLCPeriodButton(period: period,
+                                         color:chartStyle.gradientStartColor,
+                                         selectedPeriod: selectedPeriod, frame: frame)
             button.addTarget(self, action: #selector(dateButtonPress), for: .touchUpInside)
             periodStackView.addArrangedSubview(button)
         }
@@ -301,16 +298,37 @@ private extension SimpleLineChart {
     }
 }
 
-// MARK: Data setup
+// MARK: - EmptyState
 @available(iOS 13.0, *)
 extension SimpleLineChart {
     
-    public func loadPoints(dataSet: SLCDataSet) {
+    private func showEmptyState(_ rect: CGRect) {
+        let emptyState = SLCEmptyState()
+        addSubview(emptyState)
+        NSLayoutConstraint.activate([
+            emptyState.topAnchor.constraint(equalTo: topAnchor),
+            emptyState.bottomAnchor.constraint(equalTo: bottomAnchor),
+            emptyState.leadingAnchor.constraint(equalTo: leadingAnchor),
+            emptyState.trailingAnchor.constraint(equalTo: trailingAnchor)
+        ])
+    }
+}
+
+// MARK: - Data setup
+@available(iOS 13.0, *)
+public extension SimpleLineChart {
+    
+    func loadPoints(dataSet: SLCDataSet) {
         loadPoints(dataSets: [dataSet])
     }
     
-    public func loadPoints(dataSets: [SLCDataSet]) {
+    func loadPoints(dataSets: [SLCDataSet]) {
         self.dataSets = dataSets
+        self.setNeedsDisplay()
+    }
+    
+    func setChartStyle(chartStyle: SLCChartStyle) {
+        self.chartStyle = chartStyle
         self.setNeedsDisplay()
     }
 }

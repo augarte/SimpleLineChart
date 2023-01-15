@@ -9,13 +9,12 @@ import UIKit
 
 public class SLCDataSet {
     let graphPoints: [SLCData]
-    let lineColor: UIColor
     var filteredGraphPoints: [SLCData] = []
+    var lineStyle: SLCLineStyle = SLCLineStyle()
     
-    public init(graphPoints: [SLCData], lineColor: UIColor) {
+    public init(graphPoints: [SLCData]) {
         self.graphPoints = graphPoints
         self.filteredGraphPoints = graphPoints
-        self.lineColor = lineColor
     }
     
     public func filterGraphPints(period: SLCPeriod) {
@@ -23,5 +22,9 @@ public class SLCDataSet {
         filteredGraphPoints = graphPoints.filter({ value in
             return value.x > timestamp - (period.value)
         })
+    }
+    
+    public func setLineStyle(_ lineStyle: SLCLineStyle) {
+        self.lineStyle = lineStyle
     }
 }
