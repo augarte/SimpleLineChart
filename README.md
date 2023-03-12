@@ -7,8 +7,7 @@
 
 ## Description
 
-<img alt="SLC" src="Screenshots/SLC.jpg" style="border-radius:18px" height="250px">
-<img alt="SLC Styled" src="Screenshots/SLC_Styled.jpg" style="border-radius:18px" height="250px">
+<img alt="SLC" src="Screenshots/SLC.jpg" height="250px"> <img alt="SLC Styled" src="Screenshots/SLC_Styled.jpg" height="250px">
 
 SimpleLineChart is a simple, lightweight line chart library for iOS. It provides an easy-to-use interface to create customizable line charts with a few lines of code. The library supports customizable styles. It's a great option for developers who need to quickly add line charts to their iOS apps without the overhead of a larger, more complex charting library.
 
