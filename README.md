@@ -64,5 +64,5 @@ Example app can be found on the following repository [SLCExampleApp](https://git
 
 ## License
 
-SimpleLineChart is available under the GPL license.
+SimpleLineChart is available under the MIT license.
 See the [LICENSE](https://github.com/augarte/SimpleLineChart/blob/main/LICENSE) for more info.
